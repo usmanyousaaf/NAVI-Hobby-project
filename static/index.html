@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hobby Chatbot</title>
+<style>
+body { font-family: Arial; margin:0; background:#f9f9f9; }
+#chat { max-width:600px; margin:30px auto; background:white; border-radius:8px;
+        box-shadow:0 0 8px rgba(0,0,0,.2); display:flex; flex-direction:column; height:80vh; }
+#messages { flex:1; padding:10px; overflow-y:auto; }
+.message { margin:10px 0; }
+.bot { background:#4CAF50; color:white; padding:10px; border-radius:8px; display:inline-block; }
+.user { background:#2196F3; color:white; padding:10px; border-radius:8px; display:inline-block; }
+#input-area { display:flex; border-top:1px solid #ccc; }
+#input-area input { flex:1; padding:10px; border:none; }
+#input-area button { padding:10px; background:#4CAF50; color:white; border:none; cursor:pointer; }
+</style>
+</head>
+<body>
+<div id="chat">
+  <div id="messages"></div>
+  <div id="input-area">
+    <input type="text" id="userInput" placeholder="Type here...">
+    <button onclick="sendMessage()">Send</button>
+  </div>
+</div>
+<script>
+let userId = Math.random().toString(36).slice(2);
+
+async function sendMessage() {
+  const input = document.getElementById("userInput");
+  const text = input.value.trim();
+  if (!text) return;
+  addMessage(text, "user");
+  input.value = "";
+
+  const res = await fetch("/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ user_id: userId, message: text })
+  });
+  const data = await res.json();
+  addMessage(data.text, "bot");
+}
+
+function addMessage(text, sender) {
+  const div = document.createElement("div");
+  div.className = "message " + sender;
+  div.innerText = text;
+  document.getElementById("messages").appendChild(div);
+  document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
+}
+
+// Start chat with initial greeting
+window.onload = () => {
+  fetch("/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ user_id: userId, message: "" })
+  }).then(r => r.json()).then(d => addMessage(d.text, "bot"));
+};
+</script>
+</body>
+</html>
